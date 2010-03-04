@@ -654,7 +654,7 @@ class HamlParser
 			extract($GLOBALS['_HAMLPARSER_aVariables']);
 			ob_start();		// start a new output buffer
 			require $__sCompiled;
-			if ($this->isDebug())
+			if ( ! $this->bCompile || $this->isDebug())
 				@unlink($__sCompiled);
 			$__c = rtrim(ob_get_clean()); // capture the result, and discard ob
 			// Call filters
@@ -737,7 +737,7 @@ class HamlParser
 		}
 		foreach ($this->aChildren as $oChild)
 			$sCompiled .= $oChild->render();
-		$sCompiled = preg_replace('|<\?php \}\s*\?>\s*<\?php else \{\s*\?>|ius', '<?php } else { ?>', $sCompiled);
+		$sCompiled = preg_replace('#<\?php\s*}\s*\?>\s*<\?php\s+else\b#is', '<?php } else', $sCompiled);
 		return $sCompiled;
 	}
 
@@ -853,7 +853,7 @@ class HamlParser
 		// Dynamic including
 		if (preg_match('/^'.HAMLPARSER_TOKEN_INCLUDE.HAMLPARSER_TOKEN_PARSE_PHP.' (.*)/', $sSource, $aMatches) && $this->embedCode())
 		{
-			return ($this->isDebug() ? "{$this->aDebug['line']}:\t{$aMatches[1]} == <?php var_export({$aMatches[1]}) ?>\n\n" : '') . "<?php \$__instance =& HamlParser::getInstance(\$this->sPath, \$this->sTmp); echo \$this->indent(\$__instance->fetch(\$this->getFilename({$aMatches[1]})), $this->iIndent, true, false); ?>";
+			return ($this->isDebug() ? "{$this->aDebug['line']}:\t{$aMatches[1]} == <?php var_export({$aMatches[1]}) ?>\n\n" : '') . "<?php \$__instance =& HamlParser::getInstance(\$this->sPath, (\$this->bCompile ? \$this->sTmp : false)); echo \$this->indent(\$__instance->fetch(\$this->getFilename({$aMatches[1]})), $this->iIndent, true, false); ?>";
 		} else
 		// Doctype parsing
 		if (preg_match('/^'.HAMLPARSER_TOKEN_DOCTYPE.'(.*)/', $sSource, $aMatches))
